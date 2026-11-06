@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pedidos e Comandas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f8;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* --- CABEÇALHO --- */
+        .header {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn-nova {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-nova:hover { background-color: #2b6cb0; }
+
+        .btn-historico {
+            background-color: #718096;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-historico:hover { background-color: #4a5568; }
+
+        /* --- COMANDAS --- */
+        .comandas-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #48bb78;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card h3 {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            background: #c6f6d5;
+            color: #276749;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .add-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .add-item select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .btn-add {
+            background-color: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add:hover { background-color: #38a169; }
+
+        .lista-itens {
+            list-style: none;
+            flex: 1;
+            margin-bottom: 15px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 10px;
+        }
+
+        .lista-itens li {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #4a5568;
+            align-items: center;
+        }
+
+        .btn-remover {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .btn-remover:hover { background: #feb2b2; }
+
+        .card-footer {
+            border-top: 2px dashed #edf2f7;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .btn-fechar {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-fechar:hover { background-color: #c53030; }
+
+        .vazio {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        /* --- MODAIS (JANELAS ESCURAS) --- */
+        .modal-overlay {
+            display: none; 
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-larga {
+            max-width: 600px;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #1a202c;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+        }
+
+        /* Pagamento */
+        .modal-info { font-size: 1.1rem; margin-bottom: 10px; color: #2d3748; }
+        .modal-destaque { font-size: 1.4rem; font-weight: bold; color: #2b6cb0; margin-bottom: 20px; }
+        .modal-input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #4a5568; }
+        .modal-input-group input { width: 100%; padding: 12px; font-size: 1.2rem; border: 1px solid #cbd5e0; border-radius: 6px; margin-bottom: 15px; }
+        .modal-troco { font-size: 1.3rem; font-weight: bold; color: #2f855a; margin-bottom: 25px; background: #f0fff4; padding: 10px; border-radius: 6px; text-align: center; }
+        
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        
+        .btn-confirmar { flex: 1; background: #48bb78; color: white; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-confirmar:hover { background: #38a169; }
+        
+        .btn-cancelar { flex: 1; background: #e2e8f0; color: #4a5568; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .btn-cancelar:hover { background: #cbd5e0; }
+
+        /* Histórico */
+        .historico-container { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .item-historico { background: #f7fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .item-historico h4 { margin-bottom: 8px; color: #2d3748; display: flex; justify-content: space-between; font-size: 1.1rem;}
+        .item-historico p { font-size: 0.95rem; color: #4a5568; margin-bottom: 4px; }
+        .valor-pago { color: #2f855a; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <input type="text" id="nomeCliente" placeholder="Nome do Cliente ou Número da Mesa (Ex: Mesa 04)">
+        <button class="btn-nova" onclick="abrirConta()">+ Abrir Nova Conta</button>
+        <button class="btn-historico" onclick="abrirHistorico()">📜 Ver Histórico</button>
+    </div>
+
+    <div class="comandas-container" id="containerComandas">
+        <!-- As comandas aparecerão aqui -->
+    </div>
+
+    <!-- JANELA DE PAGAMENTO -->
+    <div id="modalPagamento" class="modal-overlay">
+        <div class="modal">
+            <h3>💵 Finalizar Pagamento</h3>
+            
+            <div class="modal-info" id="modalNomeCliente">Cliente: </div>
+            <div class="modal-destaque" id="modalTotal">Total: R$ 0,00</div>
+            
+            <div class="modal-input-group">
+                <label for="valorRecebido">Valor Entregue pelo Cliente (R$):</label>
+                <input type="number" id="valorRecebido" step="0.01" min="0" placeholder="Ex: 50.00" oninput="calcularTroco()">
+            </div>
+            
+            <div class="modal-troco" id="modalTroco">Troco: R$ 0,00</div>
+            
+            <div class="modal-actions">
+                <button class="btn-cancelar" onclick="fecharModalPagamento()">Cancelar</button>
+                <button class="btn-confirmar" onclick="confirmarPagamento()">Concluir Pagamento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JANELA DE HISTÓRICO -->
+    <div id="modalHistorico" class="modal-overlay">
+        <div class="modal modal-larga">
+            <h3>📜 Histórico de Vendas (Pagas)</h3>
+            
+            <div id="listaHistorico" class="historico-container">
+                <!-- Vendas finalizadas aparecerão aqui -->
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-cancelar" onclick="fecharModalHistorico()">Fechar</button>
+                <button class="btn-fechar" onclick="limparHistorico()">Limpar Histórico</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let contas = [];
+        let historico = [];
+        
+        let contaAtualParaPagamento = null;
+        let totalAtual = 0;
+
+        // Ao abrir a página, carrega as comandas abertas e o histórico salvo
+        window.onload = function() {
+            const contasSalvas = localStorage.getItem('comandasLanchonete');
+            if (contasSalvas) contas = JSON.parse(contasSalvas);
+
+            const historicoSalvo = localStorage.getItem('historicoLanchonete');
+            if (historicoSalvo) historico = JSON.parse(historicoSalvo);
+
+            renderizarContas();
+        };
+
+        function salvarDados() {
+            localStorage.setItem('comandasLanchonete', JSON.stringify(contas));
+            localStorage.setItem('historicoLanchonete', JSON.stringify(historico));
+        }
+
+        // --- FUNÇÕES DA COMANDA (TELA PRINCIPAL) ---
+
+        function abrirConta() {
+            const inputNome = document.getElementById('nomeCliente');
+            const nome = inputNome.value.trim();
+
+            if (!nome) {
+                alert("Por favor, digite o nome do cliente ou mesa.");
+                return;
+            }
+
+            const novaConta = {
+                id: Date.now(),
+                cliente: nome,
+                itens: [],
+                status: 'Aberta'
+            };
+
+            contas.push(novaConta);
+            inputNome.value = ''; 
+            salvarDados();
+            renderizarContas();
+        }
+
+        function adicionarItem(idConta) {
+            const select = document.getElementById(`select-${idConta}`);
+            const valorSelecionado = select.value;
+
+            if (!valorSelecionado) return;
+
+            const [nomeItem, precoItem] = valorSelecionado.split('|');
+            const preco = parseFloat(precoItem);
+
+            const contaIndex = contas.findIndex(c => c.id === idConta);
+            
+            contas[contaIndex].itens.push({
+                idItem: Date.now(), 
+                nome: nomeItem,
+                preco: preco
+            });
+
+            select.value = "";
+            salvarDados();
+            renderizarContas();
+        }
+
+        function removerItem(idConta, idItem) {
+            const contaIndex = contas.findIndex(c => c.id === idConta);
+            contas[contaIndex].itens = contas[contaIndex].itens.filter(i => i.idItem !== idItem);
+            salvarDados();
+            renderizarContas();
+        }
+
+        function calcularTotal(itens) {
+            return itens.reduce((soma, item) => soma + item.preco, 0);
+        }
+
+        // --- FUNÇÕES DO PAGAMENTO ---
+
+        function iniciarPagamento(idConta) {
+            const conta = contas.find(c => c.id === idConta);
+            
+            if(conta.itens.length === 0) {
+                alert("Esta conta não tem nenhum item lançado.");
+                return;
+            }
+
+            contaAtualParaPagamento = idConta;
+            totalAtual = calcularTotal(conta.itens);
+
+            document.getElementById('modalNomeCliente').innerText = `Cliente: ${conta.cliente}`;
+            document.getElementById('modalTotal').innerText = `Total: R$ ${totalAtual.toFixed(2).replace('.', ',')}`;
+            
+            document.getElementById('valorRecebido').value = '';
+            document.getElementById('modalTroco').innerText = 'Troco: R$ 0,00';
+            document.getElementById('modalTroco').style.color = '#2f855a';
+            document.getElementById('modalTroco').style.background = '#f0fff4';
+
+            document.getElementById('modalPagamento').style.display = 'flex';
+            setTimeout(() => document.getElementById('valorRecebido').focus(), 100);
+        }
+
+        function fecharModalPagamento() {
+            document.getElementById('modalPagamento').style.display = 'none';
+            contaAtualParaPagamento = null;
+        }
+
+        function calcularTroco() {
+            const valorInput = document.getElementById('valorRecebido').value;
+            const valorRecebido = parseFloat(valorInput) || 0;
+            const troco = valorRecebido - totalAtual;
+            const boxTroco = document.getElementById('modalTroco');
+
+            if (troco < 0 && valorInput !== '') {
+                boxTroco.innerText = `Faltam: R$ ${Math.abs(troco).toFixed(2).replace('.', ',')}`;
+                boxTroco.style.color = '#c53030';
+                boxTroco.style.background = '#fed7d7';
+            } else {
+                boxTroco.innerText = `Troco: R$ ${troco.toFixed(2).replace('.', ',')}`;
+                boxTroco.style.color = '#2f855a';
+                boxTroco.style.background = '#f0fff4';
+            }
+        }
+
+        function confirmarPagamento() {
+            const valorRecebido = parseFloat(document.getElementById('valorRecebido').value) || 0;
+            
+            if (valorRecebido < totalAtual) {
+                alert("O valor recebido é menor que o total da conta! Verifique o valor.");
+                return;
+            }
+
+            // 1. Encontra a conta sendo paga
+            const contaPaga = contas.find(c => c.id === contaAtualParaPagamento);
+            
+            // 2. Adiciona a data e hora do fechamento e o total pago
+            const agora = new Date();
+            contaPaga.dataFechamento = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            contaPaga.totalPago = totalAtual;
+            
+            // 3. Salva no Histórico
+            historico.push(contaPaga);
+
+            // 4. Remove das contas abertas
+            contas = contas.filter(c => c.id !== contaAtualParaPagamento);
+            
+            salvarDados();
+            renderizarContas();
+            fecharModalPagamento();
+            alert("✅ Conta finalizada e salva no histórico!");
+        }
+
+        // --- FUNÇÕES DO HISTÓRICO ---
+
+        function abrirHistorico() {
+            const container = document.getElementById('listaHistorico');
+            container.innerHTML = ''; 
+
+            if (historico.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#a0aec0; padding:20px; margin-top:20px;">Nenhuma venda finalizada até o momento.</p>';
+            } else {
+                // Inverte o array para mostrar as vendas mais recentes primeiro
+                const historicoInvertido = [...historico].reverse();
+
+                historicoInvertido.forEach(venda => {
+                    // Pega todos os nomes dos itens e junta com vírgula
+                    const resumoItens = venda.itens.map(i => i.nome).join(', ');
+
+                    container.innerHTML += `
+                        <div class="item-historico">
+                            <h4>
+                                <span>👤 ${venda.cliente}</span>
+                                <span class="valor-pago">R$ ${venda.totalPago.toFixed(2).replace('.', ',')}</span>
+                            </h4>
+                            <p><strong>🕒 Finalizado em:</strong> ${venda.dataFechamento}</p>
+                            <p><strong>🍔 Itens:</strong> ${resumoItens}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('modalHistorico').style.display = 'flex';
+        }
+
+        function fecharModalHistorico() {
+            document.getElementById('modalHistorico').style.display = 'none';
+        }
+
+        function limparHistorico() {
+            if (historico.length === 0) return;
+
+            const confirmar = confirm("⚠️ ATENÇÃO: Tem certeza que deseja apagar permanentemente todo o histórico de vendas?\n\nFaça isso apenas no final do dia após conferir o caixa.");
+            
+            if (confirmar) {
+                historico = [];
+                salvarDados();
+                abrirHistorico(); // Atualiza a tela do histórico (ficará vazia)
+            }
+        }
+
+        // --- RENDERIZAÇÃO VISUAL PRINCIPAL ---
+
+        function renderizarContas() {
+            const container = document.getElementById('containerComandas');
+            container.innerHTML = ''; 
+
+            if (contas.length === 0) {
+                container.innerHTML = '<div class="vazio">Nenhuma conta aberta no momento. Digite um nome acima para começar!</div>';
+                return;
+            }
+
+            contas.forEach(conta => {
+                const totalConta = calcularTotal(conta.itens);
+
+                let listaHtml = conta.itens.map(item => `
+                    <li>
+                        <span>${item.nome} (R$ ${item.preco.toFixed(2).replace('.', ',')})</span>
+                        <button class="btn-remover" onclick="removerItem(${conta.id}, ${item.idItem})">X</button>
+                    </li>
+                `).join('');
+
+                if (conta.itens.length === 0) {
+                    listaHtml = '<li style="color:#a0aec0; font-size:0.9rem;">Nenhum item lançado...</li>';
+                }
+
+                const card = `
+                    <div class="card">
+                        <h3>
+                            ${conta.cliente} 
+                            <span class="status">🟢 ${conta.status}</span>
+                        </h3>
+                        
+                        <div class="add-item">
+                            <select id="select-${conta.id}">
+                                <option value="" disabled selected>Selecione um item...</option>
+                                <optgroup label="🍔 Lanches">
+                                    <option value="Lanche Simples|15.00">Lanche Simples - R$ 15,00</option>
+                                    <option value="X-Tudo|25.00">X-Tudo - R$ 25,00</option>
+                                    <option value="Porção Fritas|20.00">Porção de Fritas - R$ 20,00</option>
+                                </optgroup>
+                                <optgroup label="🥤 Bebidas">
+                                    <option value="Refrigerante Lata|6.00">Refri Lata - R$ 6,00</option>
+                                    <option value="Suco Natural|9.00">Suco Natural - R$ 9,00</option>
+                                    <option value="Água|4.00">Água - R$ 4,00</option>
+                                </optgroup>
+                            </select>
+                            <button class="btn-add" onclick="adicionarItem(${conta.id})">Lançar</button>
+                        </div>
+
+                        <ul class="lista-itens">
+                            ${listaHtml}
+                        </ul>
+
+                        <div class="card-footer">
+                            <div class="total">Total: R$ ${totalConta.toFixed(2).replace('.', ',')}</div>
+                            <button class="btn-fechar" onclick="iniciarPagamento(${conta.id})">Cobrar</button>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML += card;
+            });
+        }
+    </script>
+</body>
+</html>
